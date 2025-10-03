@@ -1,5 +1,9 @@
 import React from "react";
 import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
+import Features from "../components/Features";
+import Benefits from "../components/Benefits";
+import Footer from "../components/Footer";
 
 export default function MarketingLayout({
   children,
@@ -11,6 +15,10 @@ export default function MarketingLayout({
       <div>
         {children}
         <Navbar />
+        <Hero />
+        <Features />
+        <Benefits />
+        <Footer />
       </div>
     </div>
   );
