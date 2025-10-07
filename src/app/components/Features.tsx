@@ -40,7 +40,7 @@ export default function Features() {
     {
       id: 2,
       icon: FileText,
-      title: "CV Evaluation & Suggestions",
+      title: "CV Analyzer & Suggestions",
       description:
         "Upload your CV and receive detailed analysis with actionable suggestions for improvement.",
       benefits: [

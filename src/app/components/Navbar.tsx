@@ -57,7 +57,7 @@ export default function Navbar() {
     {
       id: "cv",
       icon: FileText,
-      title: "CV Evaluation",
+      title: "CV Analyzer",
       description: "Upload your CV and receive actionable feedback.",
       color: "from-purple-500 to-pink-500",
       lightColor: "bg-purple-50",

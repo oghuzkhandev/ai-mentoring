@@ -27,7 +27,7 @@ const footerLinks = {
 
 const features = [
   { icon: MessageSquare, name: "AI Q&A", href: "#qa" },
-  { icon: FileText, name: "CV Evaluation", href: "#cv" },
+  { icon: FileText, name: "CV Analyzer", href: "#cv" },
   { icon: Edit3, name: "Cover Letter", href: "#cover" },
   { icon: Route, name: "Roadmap", href: "#roadmap" },
 ];

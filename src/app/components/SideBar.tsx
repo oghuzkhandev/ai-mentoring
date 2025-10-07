@@ -41,18 +41,18 @@ export default function SideBar() {
       badge: "New",
     },
     {
-      title: "CV Evaluation",
+      title: "CV Analyzer",
       icon: FileText,
-      href: "/dashboard/cv",
+      href: "/cv-analyze",
       badge: null,
     },
     {
       title: "Cover Letter",
       icon: Edit3,
-      href: "/dashboard/cover-letter",
+      href: "/coverletter",
       badge: null,
     },
-    { title: "Roadmap", icon: Route, href: "/dashboard/roadmap", badge: "Pro" },
+    { title: "Roadmap", icon: Route, href: "/roadmap", badge: "Pro" },
   ];
 
   const bottomItems = [

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -9,246 +9,402 @@ import {
   Zap,
   TrendingUp,
   Clock,
-  Star,
+  ClipboardList,
   BookOpen,
+  Map,
+  PenTool,
   CheckCircle2,
   ArrowRight,
+  Rocket,
+  BarChart3,
+  Award,
+  Calendar,
+  Users,
+  Briefcase,
+  FileCheck,
+  Star,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
-  const stats = [
+  interface DashboardStats {
+    cvAnalyzed: number;
+    aiChats: number;
+    careerScore: number;
+    daysActive: number;
+    coverLetters: number;
+    roadmaps: number;
+  }
+
+  const [stats, setStats] = useState<DashboardStats>({
+    cvAnalyzed: 0,
+    aiChats: 0,
+    careerScore: 0,
+    daysActive: 0,
+    coverLetters: 0,
+    roadmaps: 0,
+  });
+  const { user } = useUser();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/dashboard-stats");
+        if (!res.ok) throw new Error("Failed to fetch stats");
+        const data: DashboardStats = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setStats({
+          cvAnalyzed: 0,
+          aiChats: 0,
+          careerScore: 0,
+          daysActive: 0,
+          coverLetters: 0,
+          roadmaps: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
+  const statCards = [
     {
-      label: "CV Analyzed",
-      value: "8",
-      icon: CheckCircle2,
-      color: "text-blue-400",
+      label: "CV Analysis",
+      value: stats.cvAnalyzed,
+      unit: "Items",
+      icon: ClipboardList,
+      color: "from-blue-400 to-blue-600",
+      description: "Total CVs analyzed by AI.",
     },
     {
       label: "AI Chats",
-      value: "24",
+      value: stats.aiChats,
+      unit: "Sessions",
       icon: Sparkles,
-      color: "text-purple-400",
+      color: "from-purple-400 to-pink-500",
+      description: "Conversations held with AI Career Coach.",
     },
     {
       label: "Career Score",
-      value: "78%",
+      value: stats.careerScore,
+      unit: "%",
       icon: TrendingUp,
-      color: "text-green-400",
+      color: "from-green-400 to-emerald-600",
+      description: "Overall career progress towards your goals.",
     },
-    { label: "Days Active", value: "15", icon: Clock, color: "text-amber-400" },
+    {
+      label: "Cover Letters",
+      value: stats.coverLetters,
+      unit: "Docs",
+      icon: PenTool,
+      color: "from-amber-400 to-orange-500",
+      description: "Custom cover letters generated with AI.",
+    },
+    {
+      label: "Roadmaps",
+      value: stats.roadmaps,
+      unit: "Plans",
+      icon: Map,
+      color: "from-sky-400 to-indigo-500",
+      description: "AI-generated career learning roadmaps.",
+    },
+    {
+      label: "Days Active",
+      value: stats.daysActive,
+      unit: "Days",
+      icon: Clock,
+      color: "from-pink-400 to-red-500",
+      description: "Days active on your career journey.",
+    },
   ];
 
   const achievements = [
     { icon: Trophy, label: "First Upload", unlocked: true },
-    { icon: Target, label: "5 AI Chats", unlocked: true },
-    { icon: Star, label: "Pro Member", unlocked: false },
-    { icon: Sparkles, label: "Career Master", unlocked: false },
+    { icon: Target, label: "5 AI Chats", unlocked: stats.aiChats >= 5 },
+    { icon: Sparkles, label: "Pro Membership", unlocked: false },
+    { icon: Zap, label: "Quick Start", unlocked: stats.daysActive >= 1 },
   ];
 
-  const quickActions = [
-    {
-      title: "Continue CV Analysis",
-      progress: 60,
-      href: "/dashboard/cvanalysis",
-    },
-    {
-      title: "Finish Roadmap Setup",
-      progress: 35,
-      href: "/dashboard/roadmapgenerator",
-    },
-  ];
+  const fullName = user?.fullName || user?.firstName;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-300 relative overflow-hidden">
+        <motion.div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.15),transparent_70%)] animate-pulse"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-center z-10"
+        >
+          <div className="flex items-center justify-center mb-4">
+            <Zap className="w-10 h-10 text-blue-400 animate-spin-slow" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Loading Your Dashboard...</h2>
+          <p className="text-slate-500 text-sm">
+            Fetching your data and personalizing insights
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const GridAndDotBackground = ({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) => (
+    <div className="h-full w-full bg-slate-950 relative">
+      <div className="absolute inset-0 bg-dot-white/[0.1] pointer-events-none" />
+      <div className="absolute inset-0 bg-slate-950/80 [mask-image:radial-gradient(transparent,black)] pointer-events-none" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 md:p-10 relative overflow-hidden">
-      {/* 3D Animated Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Grid with perspective */}
-        <div
-          className="absolute inset-0 bg-[linear-gradient(to_right,#3b82f615_1px,transparent_1px),linear-gradient(to_bottom,#3b82f615_1px,transparent_1px)] bg-[size:50px_50px]"
-          style={{
-            transform: "perspective(1000px) rotateX(60deg)",
-            transformOrigin: "center bottom",
-          }}
-        />
-
-        {/* Floating 3D Spheres */}
-        <motion.div
-          className="absolute top-20 left-20 w-64 h-64 rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(59,130,246,0.3), transparent 70%)",
-            filter: "blur(40px)",
-          }}
-          animate={{
-            y: [0, 40, 0],
-            x: [0, 30, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        <motion.div
-          className="absolute bottom-20 right-20 w-80 h-80 rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle at 70% 70%, rgba(139,92,246,0.3), transparent 70%)",
-            filter: "blur(40px)",
-          }}
-          animate={{
-            y: [0, -50, 0],
-            x: [0, -40, 0],
-            scale: [1.2, 1, 1.2],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* 3D Particles */}
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-gradient-to-br from-blue-400 to-purple-400"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              boxShadow: "0 0 20px rgba(59,130,246,0.5)",
-            }}
-            animate={{
-              y: [0, -150, 0],
-              opacity: [0, 1, 0],
-              scale: [0, 1.5, 0],
-            }}
-            transition={{
-              duration: 5 + Math.random() * 5,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto space-y-10">
-        {/* Header */}
+    <GridAndDotBackground>
+      <div className="min-h-screen relative max-w-7xl mx-auto p-6 md:p-10 space-y-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-2 pb-6 border-b border-white/5"
+          className="space-y-3 pb-6 border-b border-white/10"
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <Zap className="w-6 h-6 text-blue-400" />
-            <span className="text-sm text-slate-400 uppercase tracking-widest">
-              Dashboard
+            <span className="text-sm text-blue-400 uppercase tracking-widest font-semibold">
+              Career Dashboard
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Welcome Back
+              Welcome Back, <span>{fullName}</span>
             </span>
           </h1>
           <p className="text-slate-400 text-lg max-w-3xl">
-            Track your progress, continue your learning, and achieve your career
-            goals.
+            Track your progress and plan your next career move.
           </p>
         </motion.div>
 
-        {/* Stats Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6"
-        >
-          {stats.map((stat, index) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
+          {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 + index * 0.08, type: "spring" }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.07, type: "spring" }}
                 whileHover={{
-                  scale: 1.05,
-                  rotateY: 5,
-                  boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)",
+                  scale: 1.04,
+                  boxShadow: "0 8px 20px rgba(59,130,246,0.2)",
                 }}
-                style={{ transformStyle: "preserve-3d" }}
               >
-                <Card className="bg-slate-900/70 border-white/10 backdrop-blur-xl h-full">
-                  <CardContent className="p-6 space-y-3">
+                <Card className="relative overflow-hidden bg-slate-900/70 backdrop-blur-lg border border-white/10 hover:border-blue-400/30 transition-all duration-500 group h-full">
+                  <CardContent className="p-6 flex flex-col justify-between h-full space-y-4">
                     <div className="flex items-center justify-between">
-                      <Icon className={`w-5 h-5 ${stat.color}`} />
-                      <span className={`text-3xl font-extrabold ${stat.color}`}>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-md shadow-blue-500/20`}
+                        >
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-100 tracking-wide">
+                          {stat.label}
+                        </h3>
+                      </div>
+                      <motion.span
+                        className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
                         {stat.value}
-                      </span>
+                        <span className="text-sm text-slate-400 ml-1">
+                          {stat.unit}
+                        </span>
+                      </motion.span>
                     </div>
-                    <p className="text-sm text-slate-400">{stat.label}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {stat.description}
+                    </p>
                   </CardContent>
+
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-700"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 30% 20%, rgba(59,130,246,0.15), transparent 70%)",
+                    }}
+                  />
                 </Card>
               </motion.div>
             );
           })}
-        </motion.div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Achievements */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="md:col-span-2 xl:col-span-3"
           >
-            <Card className="bg-slate-900/70 border-white/10 backdrop-blur-xl h-full">
+            <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/80 backdrop-blur-lg border border-white/10 hover:border-blue-400/30 transition-all duration-500 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-400" />
+                <CardTitle className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <Rocket className="w-6 h-6 text-blue-400" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/cv-analyze">
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl cursor-pointer hover:border-blue-400/60 transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-all">
+                          <FileCheck className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-100 text-lg mb-1">
+                            Analyze Your CV
+                          </h3>
+                          <p className="text-sm text-slate-400 leading-relaxed">
+                            Get AI-powered insights and improvements for your
+                            resume
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/roadmap">
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl cursor-pointer hover:border-purple-400/60 transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-all">
+                          <Map className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-100 text-lg mb-1">
+                            Create Career Roadmap
+                          </h3>
+                          <p className="text-sm text-slate-400 leading-relaxed">
+                            Build a personalized learning path to reach your
+                            goals
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/coverletter">
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl cursor-pointer hover:border-green-400/60 transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-all">
+                          <PenTool className="w-6 h-6 text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-100 text-lg mb-1">
+                            Generate Cover Letter
+                          </h3>
+                          <p className="text-sm text-slate-400 leading-relaxed">
+                            Create professional cover letters in seconds with AI
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/ai-chat">
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      className="p-6 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl cursor-pointer hover:border-amber-400/60 transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-amber-500/20 rounded-lg group-hover:bg-amber-500/30 transition-all">
+                          <Sparkles className="w-6 h-6 text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-100 text-lg mb-1">
+                            AI Career Coach
+                          </h3>
+                          <p className="text-sm text-slate-400 leading-relaxed">
+                            Get personalized career advice from our AI assistant
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </motion.div>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="md:col-span-2 xl:col-span-3"
+          >
+            <Card className="bg-slate-900/80 backdrop-blur-lg border border-white/10 hover:border-purple-400/30 transition-all duration-500">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-amber-400 to-pink-500 bg-clip-text text-transparent">
+                  <Trophy className="w-6 h-6 text-amber-400" />
                   Your Achievements
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {achievements.map((achievement, index) => {
                     const Icon = achievement.icon;
                     return (
                       <motion.div
                         key={achievement.label}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 + index * 0.1 }}
-                        whileHover={{
-                          scale: 1.1,
-                          rotateY: 10,
-                          boxShadow: achievement.unlocked
-                            ? "0 10px 30px rgba(59,130,246,0.3)"
-                            : "none",
-                        }}
-                        style={{ transformStyle: "preserve-3d" }}
-                        className={`p-6 rounded-xl border-2 transition-all ${
+                        transition={{ delay: 0.7 + index * 0.05 }}
+                        whileHover={{ scale: 1.05 }}
+                        className={`p-4 rounded-xl transition-all flex flex-col items-center justify-center space-y-2 border ${
                           achievement.unlocked
-                            ? "bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30"
-                            : "bg-slate-800/30 border-slate-700/30"
+                            ? "bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/40 shadow-md shadow-blue-500/10"
+                            : "bg-slate-800/30 border-slate-700/30 opacity-70"
                         }`}
                       >
                         <Icon
-                          className={`w-8 h-8 mx-auto mb-3 ${
+                          className={`w-7 h-7 ${
                             achievement.unlocked
                               ? "text-blue-400"
                               : "text-slate-600"
                           }`}
                         />
                         <p
-                          className={`text-xs text-center ${
+                          className={`text-xs font-medium text-center ${
                             achievement.unlocked
-                              ? "text-slate-300"
-                              : "text-slate-600"
+                              ? "text-slate-200"
+                              : "text-slate-500"
                           }`}
                         >
                           {achievement.label}
@@ -261,107 +417,86 @@ export default function Dashboard() {
             </Card>
           </motion.div>
 
-          {/* Learning Progress */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="md:col-span-2 xl:col-span-3"
           >
-            <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30 backdrop-blur-xl h-full">
+            <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/80 backdrop-blur-lg border border-white/10 hover:border-green-400/30 transition-all duration-500 overflow-hidden relative">
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full blur-3xl" />
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-blue-400" />
-                  Career Progress
+                <CardTitle className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                  <BarChart3 className="w-6 h-6 text-green-400" />
+                  Recent Activity
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">Profile Completion</span>
-                    <span className="font-extrabold text-blue-400">78%</span>
-                  </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                      initial={{ width: 0 }}
-                      animate={{ width: "78%" }}
-                      transition={{ duration: 1, delay: 0.6 }}
-                    />
-                  </div>
+              <CardContent className="p-6 relative z-10">
+                <div className="space-y-4">
+                  <ActivityItem
+                    icon={FileCheck}
+                    title="CV Analysis Completed"
+                    time="2 hours ago"
+                    color="blue"
+                  />
+                  <ActivityItem
+                    icon={PenTool}
+                    title="Cover Letter Generated"
+                    time="1 day ago"
+                    color="green"
+                  />
+                  <ActivityItem
+                    icon={Map}
+                    title="New Roadmap Created"
+                    time="3 days ago"
+                    color="purple"
+                  />
+                  <ActivityItem
+                    icon={Sparkles}
+                    title="AI Chat Session"
+                    time="1 week ago"
+                    color="amber"
+                  />
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    <span className="text-slate-300">CV uploaded</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    <span className="text-slate-300">
-                      First roadmap created
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm opacity-50">
-                    <div className="w-4 h-4 rounded-full border-2 border-slate-600" />
-                    <span className="text-slate-500">Complete 5 AI chats</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Continue Setup
-                </Button>
               </CardContent>
             </Card>
           </motion.div>
         </div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <h2 className="text-2xl font-semibold mb-4">
-            Continue Where You Left Off
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {quickActions.map((action, index) => (
-              <motion.div
-                key={action.title}
-                whileHover={{ scale: 1.02, rotateY: 2 }}
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <Link href={action.href}>
-                  <Card className="bg-slate-900/70 border-white/10 backdrop-blur-xl hover:border-white/20 transition-all cursor-pointer">
-                    <CardContent className="p-6 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">
-                          {action.title}
-                        </h3>
-                        <ArrowRight className="w-5 h-5 text-slate-400" />
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">Progress</span>
-                          <span className="text-blue-400 font-semibold">
-                            {action.progress}%
-                          </span>
-                        </div>
-                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                            style={{ width: `${action.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
-    </div>
+    </GridAndDotBackground>
   );
 }
+
+const ActivityItem = ({
+  icon: Icon,
+  title,
+  time,
+  color,
+}: {
+  icon: any;
+  title: string;
+  time: string;
+  color: string;
+}) => {
+  const colorMap: Record<string, string> = {
+    blue: "from-blue-500/20 to-blue-600/20 border-blue-500/40",
+    green: "from-green-500/20 to-green-600/20 border-green-500/40",
+    purple: "from-purple-500/20 to-purple-600/20 border-purple-500/40",
+    amber: "from-amber-500/20 to-amber-600/20 border-amber-500/40",
+  };
+
+  return (
+    <motion.div
+      whileHover={{ x: 4 }}
+      className="flex items-center gap-4 p-4 bg-slate-800/40 border border-slate-700/40 rounded-xl hover:bg-slate-800/60 transition-all"
+    >
+      <div className={`p-2 rounded-lg bg-gradient-to-br ${colorMap[color]}`}>
+        <Icon className="w-5 h-5 text-slate-200" />
+      </div>
+      <div className="flex-1">
+        <h4 className="font-medium text-slate-200">{title}</h4>
+        <p className="text-sm text-slate-500">{time}</p>
+      </div>
+    </motion.div>
+  );
+};
