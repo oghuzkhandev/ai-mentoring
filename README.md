@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Mentorly — AI Mentoring & Career Companion
 
-## Getting Started
+**Mentorly** is an AI-powered mentoring platform that provides personalized career guidance and interactive conversations.  
+It features both **Career Mode** for professional mentoring and **Kanka Mode** for casual, friendly conversations.  
+Additionally, it offers tools for CV analysis, cover letter generation, and personalized career roadmaps — all powered by AI.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌐 Live Demo
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+👉 (coming soon on Vercel)*
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧠 Key Features
 
-## Learn More
+### 💬 AI Chat Modes
+- **Career Mode:** Professional mentoring with AI — career advice, skill gap analysis, and goal guidance  
+- **Kanka Mode:** Casual Turkish conversations — fun, emotional, and natural 😎  
 
-To learn more about Next.js, take a look at the following resources:
+### 📊 User Dashboard
+- Tracks total CV analyses, cover letters, chat sessions, and AI interactions  
+- Calculates **career score** and **activity days** dynamically  
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📄 CV Analyzer
+- Upload your CV (PDF) and get an instant AI-based analysis  
+- Highlights weaknesses and provides actionable recommendations  
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🪄 Cover Letter Generator
+- Generates personalized cover letters based on user context and job descriptions  
 
-## Deploy on Vercel
+### 🧭 Career Roadmap
+- Creates a tailored learning & career plan to reach your professional goals  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 🔔 Real-time Notifications
+- Powered by **OneSignal** for real-time updates and user engagement  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 🧩 Persistent Conversations
+- All chats are saved in **Neon PostgreSQL**  
+- Automatically reloaded on login or page refresh  
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|--------|-------------|
+| **Frontend** | [Next.js 15 (App Router)](https://nextjs.org) + [TypeScript](https://www.typescriptlang.org) |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) + [Lucide Icons](https://lucide.dev) |
+| **Auth** | [Clerk](https://clerk.com) |
+| **Database** | [Neon PostgreSQL](https://neon.tech) + [Drizzle ORM](https://orm.drizzle.team) |
+| **Background Jobs** | [Inngest](https://www.inngest.com) |
+| **AI Layer** | Configured Custom LLM Agents |
+| **Notifications** | [OneSignal](https://onesignal.com) |
+| **Deployment** | [Vercel](https://vercel.com) |
+
+---
+
+👨‍💻 Developer
+
+Oguzhan Dogan
+
+ · LinkedIn
+ · Portfolio
