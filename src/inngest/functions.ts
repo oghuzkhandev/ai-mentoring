@@ -49,7 +49,7 @@ export const chatWithKankaAgent = inngest.createFunction(
   }
 );
 
-var imagekit = new ImageKit({
+const imagekit = new ImageKit({
   //@ts-ignore
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
   //@ts-ignore

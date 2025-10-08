@@ -20,7 +20,6 @@ import {
   Route,
   Sparkles,
   ArrowRight,
-  Menu,
   Star,
   TrendingUp,
   GraduationCap,

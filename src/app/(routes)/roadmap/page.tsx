@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2,
-  Send,
   Map,
   Sparkles,
   Brain,

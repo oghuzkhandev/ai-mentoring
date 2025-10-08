@@ -10,19 +10,12 @@ import {
   TrendingUp,
   Clock,
   ClipboardList,
-  BookOpen,
   Map,
   PenTool,
-  CheckCircle2,
   ArrowRight,
   Rocket,
   BarChart3,
-  Award,
-  Calendar,
-  Users,
-  Briefcase,
   FileCheck,
-  Star,
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

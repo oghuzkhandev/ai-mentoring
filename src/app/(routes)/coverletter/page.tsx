@@ -8,7 +8,6 @@ import {
   Send,
   Copy,
   Download,
-  RefreshCw,
   Sparkles,
   CheckCircle2,
   Clock,
@@ -113,7 +112,7 @@ export default function CoverLetterAIPage() {
     doc.setFontSize(12);
 
     const lines = doc.splitTextToSize(coverLetter, maxWidth);
-    lines.forEach((line: any) => {
+    lines.forEach((line: string) => {
       if (y > 780) {
         doc.addPage();
         y = 60;
