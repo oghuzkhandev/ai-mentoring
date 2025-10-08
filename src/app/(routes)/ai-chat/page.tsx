@@ -59,23 +59,10 @@ function MessageContent({ content }: { content: string }) {
 export default function ChatBot() {
   const { user, isLoaded } = useUser();
   const [mode, setMode] = useState<ChatMode>("career");
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: "1",
-      title: "Welcome Chat",
-      mode: "career",
-      messages: [
-        {
-          id: "1",
-          role: "assistant",
-          content:
-            "Hello! I'm your AI Career Agent. Ask me anything about your career!",
-        },
-      ],
-      createdAt: new Date(),
-    },
-  ]);
-  const [currentConversationId, setCurrentConversationId] = useState("1");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -86,19 +73,48 @@ export default function ChatBot() {
   );
   const messages = currentConversation?.messages || [];
 
-  const careerSuggestions = [
-    "What skills do I need for a data analyst role?",
-    "How do I switch careers to UX design?",
-    "What certifications help with getting into AI?",
-  ];
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!isLoaded || !user) return;
+      try {
+        const res = await fetch("/api/chatload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
 
-  const kankaSuggestions = [
-    "Bugün çok yorgunum, motive et beni!",
-    "İsmini söyleyerek başlayabilirsin :)",
-    "Hayat hakkında ne düşünüyorsun?",
-  ];
+        if (!res.ok) throw new Error("Failed to load conversations");
+        const data = await res.json();
 
-  const suggestions = mode === "career" ? careerSuggestions : kankaSuggestions;
+        if (Array.isArray(data) && data.length > 0) {
+          setConversations(data);
+          setCurrentConversationId(data[0].id);
+        } else {
+          // Eğer hiç konuşma yoksa varsayılan açılış mesajı
+          const welcome: Conversation = {
+            id: crypto.randomUUID(),
+            title: "Welcome Chat",
+            mode: "career",
+            messages: [
+              {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content:
+                  "Hello! I'm your AI Career Agent. Ask me anything about your career!",
+              },
+            ],
+            createdAt: new Date(),
+          };
+          setConversations([welcome]);
+          setCurrentConversationId(welcome.id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat history:", err);
+      }
+    };
+
+    loadConversations();
+  }, [isLoaded, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -126,22 +142,32 @@ export default function ChatBot() {
       ],
       createdAt: new Date(),
     };
-    setConversations([newConv, ...conversations]);
+    setConversations((prev) => [newConv, ...prev]);
     setCurrentConversationId(newConv.id);
   };
 
-  const deleteConversation = (id: string) => {
-    const filtered = conversations.filter((c) => c.id !== id);
-    setConversations(filtered);
-    if (currentConversationId === id && filtered.length > 0) {
-      setCurrentConversationId(filtered[0].id);
+  const deleteConversation = async (id: string) => {
+    try {
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+
+      if (currentConversationId === id) {
+        const next = conversations.find((c) => c.id !== id);
+        setCurrentConversationId(next ? next.id : null);
+      }
+
+      await fetch("/api/chatdelete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: id }),
+      });
+    } catch (err) {
+      console.error("❌ Failed to delete conversation:", err);
     }
   };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
     if (!isLoaded) return;
-    if (!text.trim() || loading) return;
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
@@ -152,14 +178,7 @@ export default function ChatBot() {
     setConversations((prev) =>
       prev.map((c) =>
         c.id === currentConversationId
-          ? {
-              ...c,
-              messages: [...c.messages, userMsg],
-              title:
-                c.messages.length === 1
-                  ? text.slice(0, 30) + (text.length > 30 ? "..." : "")
-                  : c.title,
-            }
+          ? { ...c, messages: [...c.messages, userMsg] }
           : c
       )
     );
@@ -173,8 +192,7 @@ export default function ChatBot() {
       const timeout = setTimeout(() => controller.abort(), 30000);
       const userId = user?.id ?? "guest";
       const userName = user?.fullName ?? "";
-      const currentSessionId =
-        currentConversationId !== "1" ? currentConversationId : undefined;
+      const currentSessionId = currentConversationId ?? undefined;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -196,9 +214,11 @@ export default function ChatBot() {
       const aiResponse = data?.response || "No response received.";
       const sessionId = data?.sessionId || currentSessionId;
 
-      if (sessionId && currentConversationId === "1") {
+      if (sessionId && currentConversationId !== sessionId) {
         setConversations((prev) =>
-          prev.map((c) => (c.id === "1" ? { ...c, id: sessionId } : c))
+          prev.map((c) =>
+            c.id === currentConversationId ? { ...c, id: sessionId } : c
+          )
         );
         setCurrentConversationId(sessionId);
       }
@@ -217,6 +237,7 @@ export default function ChatBot() {
         )
       );
     } catch (error) {
+      console.error("❌ Chat error:", error);
       const errorMsg: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -239,6 +260,8 @@ export default function ChatBot() {
   return (
     <div className="h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
       <SideBar />
+
+      {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "w-72" : "w-0"
@@ -258,6 +281,7 @@ export default function ChatBot() {
                 </div>
               </button>
             </div>
+
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {conversations.map((conv) => (
                 <div
@@ -310,6 +334,7 @@ export default function ChatBot() {
         )}
       </aside>
 
+      {/* Main Chat Area */}
       <main className="flex-1 flex flex-col">
         <header className="border-b border-white/10 bg-slate-900/30 backdrop-blur-xl">
           <div className="p-4 flex items-center justify-between">
@@ -355,6 +380,7 @@ export default function ChatBot() {
           </div>
         </header>
 
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             {messages.map((msg) => (
@@ -411,6 +437,7 @@ export default function ChatBot() {
           </div>
         </div>
 
+        {/* Input */}
         <div className="border-t border-white/10 bg-slate-900/30 backdrop-blur-xl p-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
             <input
