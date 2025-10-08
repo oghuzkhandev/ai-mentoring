@@ -56,9 +56,8 @@ Additionally, it offers tools for CV analysis, cover letter generation, and pers
 
 ---
 
-👨‍💻 Developer
+## 👨‍💻 Developer
 
-Oguzhan Dogan
+**Oguzhan Dogan**  
+> [GitHub](https://github.com/oghuzkhandev) • [LinkedIn](https://www.linkedin.com/in/oguzhandogandev) • [Portfolio](https://oguzhandogan.com)
 
- · LinkedIn
- · Portfolio
