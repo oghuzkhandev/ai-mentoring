@@ -309,7 +309,7 @@ export default function ChatBot() {
                       {conv.mode === "career" ? (
                         <Briefcase className="w-4 h-4" />
                       ) : (
-                        <Sparkles className="w-4 h-4" />
+                        "💬"
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
