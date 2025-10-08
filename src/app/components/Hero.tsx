@@ -2,6 +2,7 @@
 import React from "react";
 import ElectricBorder from "../../components/ElectricBorder";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Sparkles,
   Zap,
@@ -244,7 +245,7 @@ export default function Hero() {
                       hover:scale-105 hover:rotate-1 hover:shadow-[0_0_20px_rgba(255,0,60,0.6)] hover:brightness-110
                       active:scale-95"
                   >
-                    <a href="/sign-in">
+                    <Link href="/sign-in/">
                       <motion.div
                         animate={{ x: [0, 5, 0] }}
                         transition={{ duration: 1, repeat: Infinity }}
@@ -252,7 +253,7 @@ export default function Hero() {
                         <ArrowRight className="w-4 h-4" />
                       </motion.div>
                       Get Started
-                    </a>
+                    </Link>
                   </Button>
                 </motion.div>
               </div>
