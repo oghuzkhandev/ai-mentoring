@@ -53,8 +53,8 @@ export default function Footer() {
           key={i}
           className="absolute w-1 h-1 bg-blue-400 rounded-full"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: `${(i * 37) % 100}%`,
+            top: `${(i * 71) % 100}%`,
           }}
           animate={{ y: [0, -30, 0], opacity: [0, 1, 0], scale: [0, 1, 0] }}
           transition={{

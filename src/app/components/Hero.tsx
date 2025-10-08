@@ -181,6 +181,7 @@ export default function Hero() {
               speed={1.2}
               chaos={1}
               thickness={2.5}
+              className="#electric"
               style={{ borderRadius: 24, maxWidth: 420 }}
             >
               <div className="p-10 bg-white/90 backdrop-blur-md rounded-2xl text-center shadow-xl relative overflow-hidden">
