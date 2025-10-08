@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,7 @@ import {
   Maximize2,
   Check,
   Download,
+  ArrowRight,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 
@@ -18,6 +19,7 @@ export default function RoadmapVisualizer({
 }: {
   roadmapText: string;
 }) {
+  const outputRef = useRef<HTMLDivElement | null>(null);
   const roadmap = useMemo(() => parseRoadmap(roadmapText), [roadmapText]);
   const [fullscreen, setFullscreen] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());

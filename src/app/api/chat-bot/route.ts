@@ -6,7 +6,10 @@ export async function POST(req: Request) {
     const { userInput } = await req.json();
 
     if (!userInput?.trim()) {
-      return NextResponse.json({ error: "userInput required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "userInput required" },
+        { status: 400 }
+      );
     }
 
     const resultIds = await inngest.send({
@@ -30,7 +33,12 @@ export async function POST(req: Request) {
       const data = await result.json();
 
       if (data?.data?.[0]?.status === "Completed") {
-        return NextResponse.json(data);
+        const resultText =
+          data?.data?.[0]?.output?.response || "No response found";
+        return NextResponse.json({
+          response: resultText,
+          sessionId: runId,
+        });
       }
 
       if (data?.data?.[0]?.status === "Failed") {

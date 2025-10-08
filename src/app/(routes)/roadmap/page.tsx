@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2,
@@ -23,6 +23,7 @@ import RoadmapVisualizer from "@/app/components/RoadmapVisualizer";
 
 export default function RoadmapGeneratorPage() {
   const { user } = useUser();
+  const roadmapRef = React.useRef<HTMLDivElement | null>(null);
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -88,6 +89,17 @@ export default function RoadmapGeneratorPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (result && roadmapRef.current) {
+      setTimeout(() => {
+        roadmapRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 200);
+    }
+  }, [result]);
 
   const benefits = [
     {
@@ -342,6 +354,7 @@ export default function RoadmapGeneratorPage() {
 
         {result && (
           <motion.div
+            ref={roadmapRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}

@@ -24,7 +24,7 @@ import jsPDF from "jspdf";
 
 export default function CoverLetterAIPage() {
   const { user, isSignedIn, isLoaded } = useUser();
-
+  const outputRef = React.useRef<HTMLDivElement | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
@@ -38,6 +38,10 @@ export default function CoverLetterAIPage() {
     setLoading(true);
     setCoverLetter("");
     setCoverLetterId(null);
+
+    setTimeout(() => {
+      outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
 
     try {
       const res = await fetch("/api/cover-letter", {
@@ -273,6 +277,7 @@ export default function CoverLetterAIPage() {
             <AnimatePresence>
               {coverLetter && (
                 <motion.div
+                  ref={outputRef}
                   key="output"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -329,6 +334,7 @@ export default function CoverLetterAIPage() {
 
             {loading && !coverLetter && (
               <motion.div
+                ref={outputRef}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl p-12 animate-pulse"
