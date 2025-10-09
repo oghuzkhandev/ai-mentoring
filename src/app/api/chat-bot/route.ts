@@ -1,9 +1,14 @@
-import { inngest } from "@/inngest/client";
 import { NextResponse } from "next/server";
+import { db } from "@/db";
+import { chatMessages, chatSessions } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
+import { runCareerAgent } from "@/inngest/agents";
 
 export async function POST(req: Request) {
   try {
-    const { userInput } = await req.json();
+    const body = await req.json();
+    const { userId, userInput, sessionId } = body;
 
     if (!userInput?.trim()) {
       return NextResponse.json(
@@ -12,47 +17,67 @@ export async function POST(req: Request) {
       );
     }
 
-    const resultIds = await inngest.send({
-      name: "mentorly/chat.requested",
-      data: { userInput },
-    });
+    let session = sessionId;
 
-    const runId = resultIds.ids[0];
-    let attempts = 0;
+    if (session) {
+      const existing = await db
+        .select()
+        .from(chatSessions)
+        .where(eq(chatSessions.id, session));
 
-    while (attempts < 60) {
-      const result = await fetch(
-        `${process.env.INNGEST_SERVER_HOST}/v1/events/${runId}/runs`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.INNGEST_SIGNING_KEY}`,
-          },
-        }
-      );
+      if (existing.length === 0) {
+        const [newSession] = await db
+          .insert(chatSessions)
+          .values({
+            id: session,
+            userId,
+            category: "career",
+            title: userInput.slice(0, 30) || "Yeni Sohbet",
+          })
+          .returning({ id: chatSessions.id });
 
-      const data = await result.json();
-
-      if (data?.data?.[0]?.status === "Completed") {
-        const resultText =
-          data?.data?.[0]?.output?.response || "No response found";
-        return NextResponse.json({
-          response: resultText,
-          sessionId: runId,
-        });
+        session = newSession.id;
       }
-
-      if (data?.data?.[0]?.status === "Failed") {
-        return NextResponse.json({ error: "Agent failed" }, { status: 500 });
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      attempts++;
     }
 
-    return NextResponse.json({ error: "Timeout" }, { status: 500 });
+    if (!session) {
+      const [newSession] = await db
+        .insert(chatSessions)
+        .values({
+          id: uuidv4(),
+          userId,
+          category: "career",
+          title: userInput.slice(0, 30) || "Yeni Sohbet",
+        })
+        .returning({ id: chatSessions.id });
+
+      session = newSession.id;
+    }
+
+    await db.insert(chatMessages).values({
+      sessionId: session,
+      sender: "user",
+      message: userInput,
+    });
+
+    const aiResponse = await runCareerAgent(userInput);
+
+    await db.insert(chatMessages).values({
+      sessionId: session,
+      sender: "ai",
+      message: aiResponse,
+    });
+
+    return NextResponse.json({
+      sessionId: session,
+      response: aiResponse,
+    });
   } catch (error) {
+    console.error("❌ /api/chat-bot error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }
