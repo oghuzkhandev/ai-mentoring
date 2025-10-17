@@ -140,7 +140,7 @@ export default function SideBar() {
       </div>
 
       {/* Navigation Menu (scrollbar kaldırıldı) */}
-      <nav className="relative flex-1 p-4 space-y-1 overflow-y-hidden">
+      <nav className="relative flex-1 p-4 space-y-1 overflow-y-auto scrollbar-none">
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
