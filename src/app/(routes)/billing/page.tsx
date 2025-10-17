@@ -58,9 +58,9 @@ export default function Pricing() {
           transition={{ duration: 0.6 }}
           className="absolute top-6 right-6 z-50"
         >
-          <Link href="/dashboard">
+          <Link href="/">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-blue-500/30">
-              Go to Dashboard
+              Go to Back
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </Link>

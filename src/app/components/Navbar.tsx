@@ -387,7 +387,7 @@ export default function Navbar() {
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
-                      href="#pricing"
+                      href="/billing"
                       className="relative px-4 py-2 text-sm font-semibold text-slate-700 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-green-600 hover:to-emerald-500 transition-all group"
                     >
                       Pricing
