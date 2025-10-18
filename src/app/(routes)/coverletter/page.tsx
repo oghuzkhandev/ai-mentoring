@@ -69,9 +69,6 @@ export default function CoverLetterAIPage() {
         return;
       }
 
-      toast.success(data.message || "Cover letter generation started!");
-
-      // 💡 Kalan krediyi göstermek için backend'de `remainingCredits` döndürmüştük ya:
       if (data.remainingCredits !== undefined) {
         toast.info(`You have ${data.remainingCredits} credits left.`);
       }

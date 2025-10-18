@@ -24,31 +24,30 @@ export async function POST(req: Request) {
 
     if (!credits) {
       return NextResponse.json(
-        { success: false, message: "No credit record found" },
+        { success: false, message: "No credit record found." },
         { status: 403 }
       );
     }
 
-    if (!credits.isPro && credits.coverLetterCredits <= 0) {
+    // ✅ Eğer kredi 0 veya altındaysa reddet
+    if (credits.coverLetterCredits <= 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You have no remaining cover letter credits. Upgrade to Pro to continue.",
+          message: "🚫 You have no remaining cover letter credits.",
         },
         { status: 403 }
       );
     }
 
-    if (!credits.isPro) {
-      await db
-        .update(userCredits)
-        .set({
-          coverLetterCredits: credits.coverLetterCredits - 1,
-          updatedAt: new Date(),
-        })
-        .where(eq(userCredits.userId, userId));
-    }
+    const remainingCredits = credits.coverLetterCredits - 1;
+    await db
+      .update(userCredits)
+      .set({
+        coverLetterCredits: remainingCredits,
+        updatedAt: new Date(),
+      })
+      .where(eq(userCredits.userId, userId));
 
     const [newCoverLetter] = await db
       .insert(coverLetters)
@@ -74,9 +73,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       coverLetterId: newCoverLetter.id,
-      message: "Cover letter generation started. 1 credit has been used.",
+      remainingCredits,
+      message: `✅ Cover letter generation started. 1 credit used. Remaining: ${remainingCredits}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Cover Letter Route Error:", error);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
