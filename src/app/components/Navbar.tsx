@@ -99,7 +99,7 @@ export default function Navbar() {
               className="relative"
             >
               <Image
-                src="/Mentorly.png"
+                src="/mentorly.png"
                 alt="Mentorly logo"
                 width={48}
                 height={48}

@@ -83,7 +83,12 @@ export default function SideBar() {
             transition={{ duration: 0.6 }}
             className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50"
           >
-            <Image src="/mentorly.png" alt="#" width={40} height={40} />
+            <Image
+              src="/mentorly.png"
+              alt="Mentorly Logo"
+              width={40}
+              height={40}
+            />
           </motion.div>
 
           <AnimatePresence mode="wait">
