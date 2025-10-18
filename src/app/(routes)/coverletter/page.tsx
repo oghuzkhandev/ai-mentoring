@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/SideBar";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   Loader2,
   Send,
@@ -32,8 +33,9 @@ export default function CoverLetterAIPage() {
   const [copied, setCopied] = useState(false);
 
   const generateLetter = async () => {
-    if (!jobDescription.trim()) return;
-    if (!isSignedIn || !user) return alert("Please sign in first.");
+    if (!jobDescription.trim())
+      return toast.error("Please enter a job description!");
+    if (!isSignedIn || !user) return toast.error("Please sign in first.");
 
     setLoading(true);
     setCoverLetter("");
@@ -60,11 +62,26 @@ export default function CoverLetterAIPage() {
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Something went wrong!");
+        setLoading(false);
+        return;
+      }
+
+      toast.success(data.message || "Cover letter generation started!");
+
+      // 💡 Kalan krediyi göstermek için backend'de `remainingCredits` döndürmüştük ya:
+      if (data.remainingCredits !== undefined) {
+        toast.info(`You have ${data.remainingCredits} credits left.`);
+      }
+
       if (!data?.coverLetterId) throw new Error("Cover letter ID not returned");
 
       setCoverLetterId(data.coverLetterId);
     } catch (error) {
       console.error("Error generating letter:", error);
+      toast.error("Failed to start generation process.");
       setCoverLetter("Failed to start generation process.");
       setLoading(false);
     }

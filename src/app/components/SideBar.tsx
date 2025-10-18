@@ -44,7 +44,7 @@ export default function SideBar() {
       title: "CV Analyzer",
       icon: FileText,
       href: "/cv-analyze",
-      badge: null,
+      badge: "Pro",
     },
     {
       title: "Cover Letter",
@@ -52,7 +52,7 @@ export default function SideBar() {
       href: "/coverletter",
       badge: null,
     },
-    { title: "Roadmap", icon: Route, href: "/roadmap", badge: "Pro" },
+    { title: "Roadmap", icon: Route, href: "/roadmap", badge: null },
   ];
 
   const bottomItems = [
@@ -139,7 +139,6 @@ export default function SideBar() {
         </div>
       </div>
 
-      {/* Navigation Menu (scrollbar kaldırıldı) */}
       <nav className="relative flex-1 p-4 space-y-1 overflow-y-auto scrollbar-none">
         {menuItems.map((item, index) => {
           const Icon = item.icon;

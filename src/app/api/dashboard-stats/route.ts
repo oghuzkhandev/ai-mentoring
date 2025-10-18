@@ -1,5 +1,11 @@
 import { db } from "@/db";
-import { cvAnalyses, coverLetters, roadMaps, chatSessions } from "@/db/schema";
+import {
+  cvAnalyses,
+  coverLetters,
+  roadMaps,
+  chatSessions,
+  userCredits,
+} from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -15,7 +21,26 @@ export async function GET() {
       );
     }
 
-    // === CV Analyses ===
+    // Kullanıcının kredi kaydı yoksa otomatik oluştur (ilk girişte hata almamak için)
+    let [credits] = await db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, userId));
+
+    if (!credits) {
+      await db.insert(userCredits).values({
+        userId,
+        coverLetterCredits: 5,
+        roadmapCredits: 3,
+        cvAnalysisCredits: 0,
+        isPro: false,
+      });
+      [credits] = await db
+        .select()
+        .from(userCredits)
+        .where(eq(userCredits.userId, userId));
+    }
+
     const cvRows = await db
       .select()
       .from(cvAnalyses)
@@ -43,28 +68,31 @@ export async function GET() {
       daysActive = Math.max(1, Math.ceil(diff));
     }
 
-    // === Cover Letters ===
     const coverLettersRows = await db
       .select()
       .from(coverLetters)
       .where(eq(coverLetters.userId, userId));
     const coverLettersCount = coverLettersRows.length;
 
-    // === Roadmaps ===
     const roadMapsRows = await db
       .select()
       .from(roadMaps)
       .where(eq(roadMaps.userId, userId));
     const roadMapsCount = roadMapsRows.length;
 
-    // === AI Chat Sessions ===
     const chatSessionsRows = await db
       .select()
       .from(chatSessions)
       .where(eq(chatSessions.userId, userId));
     const aiChatsCount = chatSessionsRows.length;
 
-    // === Response ===
+    const remainingCredits = {
+      coverLetter: credits?.coverLetterCredits ?? 0,
+      roadmap: credits?.roadmapCredits ?? 0,
+      cvAnalysis: credits?.cvAnalysisCredits ?? 0,
+      isPro: credits?.isPro ?? false,
+    };
+
     return NextResponse.json({
       cvAnalyzed,
       careerScore,
@@ -72,6 +100,7 @@ export async function GET() {
       coverLetters: coverLettersCount,
       roadmaps: roadMapsCount,
       aiChats: aiChatsCount,
+      credits: remainingCredits,
     });
   } catch (error: any) {
     console.error("❌ Error fetching dashboard stats:", error);

@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@clerk/nextjs";
 import SideBar from "@/app/components/SideBar";
 import RoadmapVisualizer from "@/app/components/RoadmapVisualizer";
+import { toast } from "sonner";
 
 export default function RoadmapGeneratorPage() {
   const { user } = useUser();
@@ -29,9 +30,27 @@ export default function RoadmapGeneratorPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [credits, setCredits] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const res = await fetch("/api/dashboard-stats");
+        if (res.ok) {
+          const data = await res.json();
+          setCredits(data?.credits?.roadmap ?? 0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch credits:", err);
+      }
+    };
+    fetchCredits();
+  }, []);
+
   const handleGenerate = async () => {
     if (!userInput.trim()) {
       setError("Please describe your career goal first 😅");
+      toast.error("Please describe your career goal first 😅");
       return;
     }
 
@@ -50,9 +69,27 @@ export default function RoadmapGeneratorPage() {
         }),
       });
 
+      const data = await res.json();
+
+      if (res.status === 403) {
+        toast.error(
+          data.message || "🚫 You have no roadmap credits left. Upgrade to Pro."
+        );
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to start roadmap generation");
 
-      const { roadmapId } = await res.json();
+      const { roadmapId, remainingCredits } = data;
+
+      toast.success(
+        `✅ Roadmap generation started! Remaining credits: ${
+          remainingCredits ?? (credits ?? 0) - 1
+        }`
+      );
+      setCredits(remainingCredits ?? (credits !== null ? credits - 1 : 0));
+
       if (!roadmapId) throw new Error("No roadmap ID returned from server");
 
       let attempts = 0;
@@ -80,6 +117,11 @@ export default function RoadmapGeneratorPage() {
       throw new Error("Timeout: Roadmap took too long to generate.");
     } catch (err) {
       console.error("Error:", err);
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while generating the roadmap."
+      );
       setError(
         err instanceof Error
           ? err.message
@@ -159,6 +201,13 @@ export default function RoadmapGeneratorPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="max-w-6xl w-full"
         >
+          {/* <div className="text-center mb-6 text-slate-400 text-sm">
+            🚀 Remaining Roadmap Credits:{" "}
+            <span className="text-blue-400 font-semibold">
+              {credits !== null ? credits : "Loading..."}
+            </span>
+          </div> */}
+
           {/* Hero Section */}
           <div className="text-center mb-12">
             <motion.div

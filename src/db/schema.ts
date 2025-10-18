@@ -60,3 +60,13 @@ export const coverLetters = pgTable("coverletters", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const userCredits = pgTable("user_credits", {
+  userId: text("user_id").primaryKey(),
+  coverLetterCredits: integer("cover_letter_credits").notNull().default(5),
+  roadmapCredits: integer("roadmap_credits").notNull().default(3),
+  cvAnalysisCredits: integer("cv_analysis_credits").notNull().default(0),
+  isPro: boolean("is_pro").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});

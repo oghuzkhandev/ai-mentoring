@@ -139,26 +139,13 @@ export const RoadMapAgent = inngest.createFunction(
   { id: "generate-roadmap-with-ai" },
   { event: "roadmap/generator.requested" },
   async ({ event, step }) => {
-    const { roadmapId, userInput, userEmail, userId } = await event.data;
+    const { roadmapId, userInput } = event.data;
+
     const roadmapResult = await step.run("generate-roadmap", async () => {
       return await generateRoadmap(userInput);
     });
 
-    await step.run("save-roadmap-to-db", async () => {
-      await db
-        .insert(roadMaps)
-        .values({
-          id: roadmapId,
-          userId,
-          userEmail,
-          userInput,
-          roadmapData: roadmapResult,
-          status: "Completed",
-        })
-        .returning();
-    });
-
-    await step.run("update-roadmap-to-db", async () => {
+    await step.run("update-roadmap-in-db", async () => {
       await db
         .update(roadMaps)
         .set({
@@ -168,12 +155,11 @@ export const RoadMapAgent = inngest.createFunction(
         })
         .where(eq(roadMaps.id, roadmapId));
     });
-
-    return NextResponse.json({
+    return {
       success: true,
       roadmapId,
       roadmap: roadmapResult,
-    });
+    };
   }
 );
 

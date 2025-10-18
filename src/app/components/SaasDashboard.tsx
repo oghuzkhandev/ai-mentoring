@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
@@ -30,6 +29,12 @@ export default function Dashboard() {
     daysActive: number;
     coverLetters: number;
     roadmaps: number;
+    credits: {
+      coverLetter: number;
+      roadmap: number;
+      cvAnalysis: number;
+      isPro: boolean;
+    };
   }
 
   const [stats, setStats] = useState<DashboardStats>({
@@ -39,6 +44,12 @@ export default function Dashboard() {
     daysActive: 0,
     coverLetters: 0,
     roadmaps: 0,
+    credits: {
+      coverLetter: 0,
+      roadmap: 0,
+      cvAnalysis: 0,
+      isPro: false,
+    },
   });
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
@@ -59,6 +70,7 @@ export default function Dashboard() {
           daysActive: 0,
           coverLetters: 0,
           roadmaps: 0,
+          credits: { coverLetter: 0, roadmap: 0, cvAnalysis: 0, isPro: false },
         });
       } finally {
         setLoading(false);
@@ -189,6 +201,42 @@ export default function Dashboard() {
           <p className="text-slate-400 text-lg max-w-3xl">
             Track your progress and plan your next career move.
           </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="md:col-span-2 xl:col-span-3"
+        >
+          <Card className="bg-slate-900/80 backdrop-blur-lg border border-yellow-400 transition-all duration-500">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <Zap className="w-6 h-6 text-blue-400" />
+                Your Remaining Credits
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <h4 className="text-xl font-bold text-slate-100">
+                  {stats.credits.cvAnalysis}
+                </h4>
+                <p className="text-sm text-slate-400">CV Analysis Credits</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-slate-100">
+                  {stats.credits.coverLetter}
+                </h4>
+                <p className="text-sm text-slate-400">Cover Letter Credits</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-slate-100">
+                  {stats.credits.roadmap}
+                </h4>
+                <p className="text-sm text-slate-400">Roadmap Credits</p>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">

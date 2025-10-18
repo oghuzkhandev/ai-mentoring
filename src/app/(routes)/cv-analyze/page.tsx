@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Upload,
   FileText,
@@ -14,9 +14,9 @@ import {
 import SideBar from "../../components/SideBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { LampContainer } from "../../../components/ui/lamp";
+import { toast } from "sonner";
 
 const features = [
   {
@@ -56,72 +56,27 @@ export default function CVAnalyzer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [isPro, setIsPro] = useState<boolean>(false);
 
   function formatAnalysisForDisplay(text: string): string {
     if (!text) return "";
 
-    // Gereksiz markdownları temizle
     text = text.replace(/\*\*/g, "").replace(/[*_]+/g, "");
 
-    // --- SECTION HEADERS ---
     text = text.replace(
-      /🏆\s*SCORE:?/gi,
-      `<h2 class="text-3xl font-extrabold bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-600 bg-clip-text text-transparent mt-10 mb-4 tracking-wide">🏆 SCORE</h2>`
+      /(📊\s*Scoring Breakdown|🚨\s*Top 5 Critical Issues|💪\s*Top Strengths|🔧\s*Areas for Improvement|🧩\s*ATS & Structure Optimization|🧠\s*Skills & Competency Insights |🚀\s*Strategic Career Recommendations|💼\s*Overall Impression)/gi,
+      (match) =>
+        `<h2 class="text-xl font-bold mt-8 mb-4 tracking-wide text-white uppercase">${match}</h2>`
     );
 
-    text = text.replace(
-      /📊\s*SCORING BREAKDOWN/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-blue-400 to-purple-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-indigo-500 pl-3">📊 SCORING BREAKDOWN</h2>`
-    );
-
-    text = text.replace(
-      /🚨\s*TOP 5 CRITICAL ISSUES.*$/gim,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-red-400 via-pink-400 to-orange-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-red-500 pl-3">🚨 TOP 5 CRITICAL ISSUES (WHY SCORE WAS REDUCED)</h2>`
-    );
-
-    text = text.replace(
-      /💪\s*TOP STRENGTHS/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-blue-500 pl-3">💪 TOP STRENGTHS</h2>`
-    );
-
-    text = text.replace(
-      /🔧\s*AREAS FOR IMPROVEMENT/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-300 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-yellow-500 pl-3">🔧 AREAS FOR IMPROVEMENT</h2>`
-    );
-
-    text = text.replace(
-      /🧩\s*ATS & STRUCTURE OPTIMIZATION/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-sky-500 pl-3">🧩 ATS & STRUCTURE OPTIMIZATION</h2>`
-    );
-
-    text = text.replace(
-      /🧠\s*SKILLS & COMPETENCIES/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-pink-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-purple-500 pl-3">🧠 SKILLS & COMPETENCIES</h2>`
-    );
-
-    text = text.replace(
-      /🚀\s*STRATEGIC RECOMMENDATIONS/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-pink-400 via-rose-400 to-red-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-pink-500 pl-3">🚀 STRATEGIC RECOMMENDATIONS</h2>`
-    );
-
-    text = text.replace(
-      /💼\s*OVERALL IMPRESSION/gi,
-      `<h2 class="text-2xl font-bold bg-gradient-to-r from-teal-300 via-emerald-400 to-green-400 bg-clip-text text-transparent mt-10 mb-3 border-l-4 border-teal-500 pl-3">💼 OVERALL IMPRESSION</h2>`
-    );
-
-    // --- BULLETS & BODY TEXT ---
+    // Liste işaretlerini düzelt
     text = text.replace(/^[-•*]\s+/gm, "• ");
-    text = text.replace(
-      /(^|\n)(•\s.*)/g,
-      '$1<p class="text-base leading-relaxed text-gray-200 font-medium mb-2 ml-3">$2</p>'
-    );
 
-    // --- PARAGRAPHS & LINE BREAKS ---
+    // Paragraf aralarını düzenle
     text = text.replace(/\n{2,}/g, "</div><div class='mt-6'>");
     text = text.replace(/\n/g, "<br>");
-    text = `<div class="text-gray-100 leading-relaxed tracking-wide text-[1.05rem]">${text}</div>`;
 
-    return text;
+    return `<div class="text-gray-100 leading-relaxed tracking-wide text-[1.05rem]">${text}</div>`;
   }
 
   const handleDrag = (e: React.DragEvent) => {
@@ -142,24 +97,44 @@ export default function CVAnalyzer() {
     if (f) setFile(f);
   };
 
+  useEffect(() => {
+    const fetchProStatus = async () => {
+      try {
+        const res = await fetch("/api/dashboard-stats");
+        if (res.ok) {
+          const data = await res.json();
+          setIsPro(data?.credits?.isPro || false);
+        } else {
+          console.error("Failed to fetch pro status");
+        }
+      } catch (err) {
+        console.error("❌ Error fetching pro status:", err);
+      }
+    };
+
+    fetchProStatus();
+  }, []);
+
   const analyzeCV = async () => {
     if (!file) return;
-
+    if (!isPro) {
+      toast.error(
+        "🚫 This feature is available for Pro users only. Upgrade to Pro to use CV Analysis!"
+      );
+      return;
+    }
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       setError("Only PDF files are supported.");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       setError("File too large. Max 5MB allowed.");
       return;
     }
-
     setAnalyzing(true);
     setError(null);
     setResult(null);
     setProgress(0);
-
     const formData = new FormData();
     formData.append("cv", file);
 
@@ -168,34 +143,32 @@ export default function CVAnalyzer() {
         method: "POST",
         body: formData,
       });
-
       const data = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(data.error || "Upload failed");
-
       const { recordId: serverRecordId } = data;
       let attempts = 0;
       const maxAttempts = 40;
-
       while (attempts < maxAttempts) {
         const checkRes = await fetch(`/api/cv-analyze?id=${serverRecordId}`);
         if (!checkRes.ok) throw new Error("Server error during analysis check");
-
         const checkData = await checkRes.json();
         if (checkData.status === "completed") {
           setResult(checkData);
           setAnalyzing(false);
           setProgress(100);
+          toast.success(
+            `✅ CV analysis complete! ${
+              checkData.score ? `Your score: ${checkData.score}/100` : ""
+            }`
+          );
           return;
         }
-
-        if (checkData.status === "failed") {
+        if (checkData.status === "failed")
           throw new Error("Analysis failed. Please try again.");
-        }
         setProgress(((attempts + 1) / maxAttempts) * 100);
         await new Promise((r) => setTimeout(r, 4000));
         attempts++;
       }
-
       throw new Error("Analysis timeout. Please try again.");
     } catch (err) {
       console.error("Error:", err);
@@ -208,34 +181,24 @@ export default function CVAnalyzer() {
   return (
     <div className="min-h-screen flex bg-slate-950 text-white">
       <SideBar />
-
       <main className="flex-1">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="min-h-[400px] flex flex-col items-center justify-center">
-            <Badge className="py-2 mt-4 bg-blue-500/20 border-blue-500/40 text-blue-200 backdrop-blur-xl">
+          <div className="py-16 text-center">
+            <Badge className="py-2 px-4 bg-blue-500/20 border-blue-500/40 text-blue-200 backdrop-blur-xl text-sm tracking-wide">
               <Sparkles className="w-4 h-4 mr-2 inline" />
               AI-Powered CV Analysis
             </Badge>
-            <LampContainer className="min-h-[400px]">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 2, delay: 0.3 }}
-                className="text-center"
-              >
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                  Transform Your CV
-                </h1>
-                <p className="text-xl text-white max-w-2xl mx-auto mt-2">
-                  Get instant, AI-powered feedback to make your CV stand out and
-                  impress recruiters.
-                </p>
-              </motion.div>
+            <LampContainer className="min-h-[400px] flex flex-col items-center justify-center mt-6">
+              <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                Transform Your CV
+              </h1>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto mt-4 leading-relaxed">
+                Get instant, AI-powered feedback to make your CV stand out and
+                impress recruiters.
+              </p>
             </LampContainer>
           </div>
 
-          {/* Upload Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -262,7 +225,6 @@ export default function CVAnalyzer() {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-
                   {!file ? (
                     <label
                       htmlFor="cv-upload"
@@ -274,7 +236,6 @@ export default function CVAnalyzer() {
                       >
                         <Upload className="w-16 h-16 text-blue-300" />
                       </motion.div>
-
                       <div className="text-center space-y-4">
                         <div className="space-y-2">
                           <p className="text-2xl font-bold text-white">
@@ -284,18 +245,17 @@ export default function CVAnalyzer() {
                             or click to browse files
                           </p>
                         </div>
-
                         <div className="flex items-center justify-center gap-6 text-sm text-white">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-400" />
+                            <CheckCircle2 className="w-4 h-4 text-green-400" />{" "}
                             PDF Only
                           </div>
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-400" />
+                            <CheckCircle2 className="w-4 h-4 text-green-400" />{" "}
                             Max 5MB
                           </div>
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-400" />
+                            <CheckCircle2 className="w-4 h-4 text-green-400" />{" "}
                             Secure & Private
                           </div>
                         </div>
@@ -321,7 +281,6 @@ export default function CVAnalyzer() {
                             </p>
                           </div>
                         </div>
-
                         <div className="flex gap-3">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -351,65 +310,18 @@ export default function CVAnalyzer() {
                             <span className="flex items-center gap-2">
                               {analyzing ? (
                                 <>
-                                  <Loader2 className="w-5 h-5 animate-spin" />
+                                  <Loader2 className="w-5 h-5 animate-spin" />{" "}
                                   Analyzing...
                                 </>
                               ) : (
                                 <>
-                                  <Sparkles className="w-5 h-5" />
-                                  Analyze CV
+                                  <Sparkles className="w-5 h-5" /> Analyze CV
                                 </>
                               )}
                             </span>
                           </motion.button>
                         </div>
                       </div>
-
-                      {analyzing && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="relative p-6 mt-4 rounded-2xl bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 border border-white/20 backdrop-blur-xl overflow-hidden"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-pulse blur-2xl" />
-
-                          <div className="relative z-10 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                                <span className="text-blue-300 font-medium">
-                                  Analyzing your CV with AI intelligence...
-                                </span>
-                                <span className="flex gap-1 ml-2">
-                                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></span>
-                                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></span>
-                                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-300"></span>
-                                </span>
-                              </div>
-
-                              <span className="text-sm text-blue-400 font-semibold">
-                                {progress.toFixed(0)}%
-                              </span>
-                            </div>
-
-                            <div className="relative w-full h-3 bg-slate-800/60 rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${progress}%` }}
-                                transition={{ duration: 0.4, ease: "easeOut" }}
-                                className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 shadow-[0_0_10px_rgba(168,85,247,0.6)]"
-                              />
-                            </div>
-
-                            <p className="text-sm text-white/70 italic text-center">
-                              Please wait a few moments while your CV is
-                              analyzed across 5 key dimensions: structure,
-                              clarity, skills, impact, and ATS optimization.
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-
                       {error && (
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -419,7 +331,6 @@ export default function CVAnalyzer() {
                           <p className="text-red-300">{error}</p>
                         </motion.div>
                       )}
-
                       {result && (
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -441,7 +352,6 @@ export default function CVAnalyzer() {
                               </div>
                             </div>
                           </div>
-
                           <div className="p-8 rounded-xl bg-slate-900/70 border border-white/20 space-y-4 text-left overflow-auto">
                             <div
                               className="text-white text-base leading-relaxed whitespace-pre-line"
@@ -461,7 +371,6 @@ export default function CVAnalyzer() {
             </Card>
           </motion.div>
 
-          {/* Features Section */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 my-16 px-10">
             {features.map((feature, idx) => {
               const Icon = feature.icon;
@@ -493,7 +402,6 @@ export default function CVAnalyzer() {
             })}
           </div>
 
-          {/* Trust Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -516,12 +424,10 @@ export default function CVAnalyzer() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge className="bg-green-500/30 text-green-200 border-green-400/40">
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      SSL Encrypted
+                      <CheckCircle2 className="w-4 h-4 mr-2" /> SSL Encrypted
                     </Badge>
                     <Badge className="bg-blue-500/30 text-blue-200 border-blue-400/40">
-                      <Shield className="w-4 h-4 mr-2" />
-                      GDPR Compliant
+                      <Shield className="w-4 h-4 mr-2" /> GDPR Compliant
                     </Badge>
                   </div>
                 </div>
