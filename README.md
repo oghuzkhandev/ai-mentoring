@@ -8,7 +8,7 @@ Additionally, it offers tools for CV analysis, cover letter generation, and pers
 
 ## 🌐 Live Demo
 
-👉 (coming soon on Vercel)*
+👉 https://ai-mentoring.vercel.app
 
 ---
 
